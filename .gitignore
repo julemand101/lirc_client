@@ -5,6 +5,7 @@
 .packages
 .project
 .pub/
+.atom/
 build/
 **/packages/
 
