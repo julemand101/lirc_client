@@ -13,7 +13,7 @@ Dart_NativeFunction ResolveName(Dart_Handle name,
                                 bool* auto_setup_scope);
 
 
-DART_EXPORT Dart_Handle sample_extension_Init(Dart_Handle parent_library) {
+DART_EXPORT Dart_Handle lirc_extension_Init(Dart_Handle parent_library) {
   if (Dart_IsError(parent_library)) {
     return parent_library;
   }
