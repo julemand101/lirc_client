@@ -12,5 +12,5 @@ platforms:
     compiler:
       arguments: ['-fPIC', '-Wall']
     linker:
-      arguments: ['-shared']
+      arguments: ['-shared', '-llirc_client']
       output_file: 'liblirc_extension.so'

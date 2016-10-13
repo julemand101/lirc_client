@@ -4,6 +4,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <lirc/lirc_client.h>
 #include "include/dart_api.h"
 #include "include/dart_native_api.h"
 
