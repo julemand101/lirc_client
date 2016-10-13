@@ -7,7 +7,7 @@
 .pub/
 .atom/
 build/
-**/packages/
+**/packages
 
 # Files created by dart2js
 # (Most Dart developers will use pub build to compile Dart, use/modify these
@@ -19,6 +19,7 @@ build/
 *.js.deps
 *.js.map
 *.info.json
+*.so
 
 # Directory created by dartdoc
 doc/api/
