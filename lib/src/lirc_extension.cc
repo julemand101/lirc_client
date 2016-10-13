@@ -4,6 +4,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include "dart_api.h"
+#include "dart_native_api.h"
 
 
 Dart_NativeFunction ResolveName(Dart_Handle name,
