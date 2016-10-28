@@ -6,8 +6,10 @@
 /// More dartdocs go here.
 library dart_lirc_client;
 
+import 'dart:async';
+import 'dart:isolate';
 import 'dart-ext:lirc_extension';
 
-export 'src/dart_lirc_client_base.dart';
+part 'src/sample_asynchronous_extension.dart';
 
 // TODO: Export any libraries intended for clients of this package.

@@ -6,4 +6,10 @@ import 'package:dart_lirc_client/dart_lirc_client.dart';
 main() {
   var awesome = new Awesome();
   print('awesome: ${awesome.isAwesome}');
+
+  RandomArray randomArray = new RandomArray();
+
+  randomArray.randomArray(123, 10).then((List<int> values) {
+    print(values);
+  });
 }
