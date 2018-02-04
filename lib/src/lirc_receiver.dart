@@ -1,19 +1,30 @@
-// Copyright (c) 2016, <your name>. All rights reserved. Use of this source code
-// is governed by a BSD-style license that can be found in the LICENSE file.
+part of dart_lirc_client;
 
-// TODO: Put public facing types in this file.
-
-/// Checks if you are awesome. Spoiler: you are.
-import 'dart:async';
+/*
+ * Vigtige data at sende med over i C koden:
+ *    prog -> navnet på programmet som er angivet i lircrc conf filen.
+ *    config -> sti til config fil.
+ *              denne kan være null hvor lirc så vil lede efter filen i en
+ *              standardplacering
+ */
 
 class LircReceiver {
-  var socketPath;
-  var configFile;
-  var appName;
+  String appName;
+  String configFile;
 
-  LircReceiver({this.socketPath, this.configFile, this.appName});
+  LircReceiver(this.appName, this.configFile);
 
-  Stream<String> test() {
-    return null;
+  run() {
+    RawReceivePort port = new RawReceivePort((List list) {
+      String msg = list[0];
+      bool error = list[1];
+
+      print("$msg = $error");
+    });
+    print("Setting up port");
+    _newServicePort().send([appName, configFile, port.sendPort]);
+    print("Got port");
   }
+
+  SendPort _newServicePort() native "LircReceiver_ServicePort";
 }

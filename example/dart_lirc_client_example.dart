@@ -4,9 +4,6 @@
 import 'package:dart_lirc_client/dart_lirc_client.dart';
 
 main() {
-  RandomArray randomArray = new RandomArray();
-
-  randomArray.randomArray(123, 10).then((List<int> values) {
-    print(values);
-  });
+  var test = new LircReceiver("test", null);
+  test.run();
 }

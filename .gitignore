@@ -30,3 +30,6 @@ pubspec.lock
 
 # Vagrant
 .vagrant
+
+# IntelliJ IDEA
+.idea/
