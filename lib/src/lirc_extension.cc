@@ -1,4 +1,5 @@
 #include <lirc/lirc_client.h>
+#include <unistd.h>
 #include "include/dart_api.h"
 #include "include/dart_native_api.h"
 
@@ -10,6 +11,9 @@ struct FunctionLookup {
 Dart_Handle HandleError(Dart_Handle handle);
 Dart_NativeFunction ResolveName(Dart_Handle name, int argc, bool* auto_setup_scope);
 void lircReceiverServicePort(Dart_NativeArguments arguments);
+void lircTransmitterGetLocalSocket(Dart_NativeArguments arguments);
+void lircTransmitterServicePort(Dart_NativeArguments arguments);
+void lircTransmitterCloseLocalSocket(Dart_NativeArguments arguments);
 void wrappedLircReceiver(Dart_Port dest_port_id, Dart_CObject* message);
 bool sendMessage(const char* msg, bool error, Dart_Port port_id);
 
@@ -35,6 +39,9 @@ Dart_Handle HandleError(Dart_Handle handle) {
 
 FunctionLookup function_list[] = {
     {"LircReceiver_ServicePort", lircReceiverServicePort},
+    {"LircTransmitter_GetLocalSocket", lircTransmitterGetLocalSocket},
+    {"LircTransmitter_ServicePort", lircTransmitterServicePort},
+    {"LircTransmitter_CloseLocalSocket", lircTransmitterCloseLocalSocket},
     {NULL, NULL}};
 
 Dart_NativeFunction ResolveName(Dart_Handle name, int argc, bool* auto_setup_scope) {
@@ -64,14 +71,75 @@ Dart_NativeFunction ResolveName(Dart_Handle name, int argc, bool* auto_setup_sco
     return result;
 }
 
+/**
+ ** SendPort _getLircReceiverServicePort() native "LircReceiver_ServicePort";
+ **/
 void lircReceiverServicePort(Dart_NativeArguments arguments) {
     Dart_EnterScope();
     Dart_SetReturnValue(arguments, Dart_Null());
-    Dart_Port service_port = Dart_NewNativePort("LircReceiverService", wrappedLircReceiver, true);
+    Dart_Port service_port = Dart_NewNativePort("LircReceiverService", wrappedLircReceiver, false);
 
     if (service_port != ILLEGAL_PORT) {
         Dart_Handle send_port = HandleError(Dart_NewSendPort(service_port));
         Dart_SetReturnValue(arguments, send_port);
+    }
+
+    Dart_ExitScope();
+}
+
+/**
+ ** int _getLircTransmitterLocalSocket(String path) native "LircTransmitter_GetLocalSocket";
+ **/
+void lircTransmitterGetLocalSocket(Dart_NativeArguments arguments) {
+    Dart_EnterScope();
+    Dart_Handle path_object = HandleError(Dart_GetNativeArgument(arguments, 0));
+
+    int fd;
+    const char* path = NULL;
+
+    if (Dart_IsString(path_object)) {
+        Dart_StringToCString(path_object, &path);
+    }
+
+    fd = lirc_get_local_socket(path, false);
+
+    Dart_SetReturnValue(arguments, HandleError(Dart_NewInteger(fd)));
+    Dart_ExitScope();
+}
+
+/**
+ ** SendPort _getLircTransmitterServicePort() native "LircTransmitter_ServicePort";
+ **/
+void lircTransmitterServicePort(Dart_NativeArguments arguments) {
+    Dart_EnterScope();
+    Dart_SetReturnValue(arguments, Dart_Null());
+    Dart_Port service_port = Dart_NewNativePort("LircTransmitterService", wrappedLircTransmitter, false);
+
+    if (service_port != ILLEGAL_PORT) {
+        Dart_Handle send_port = HandleError(Dart_NewSendPort(service_port));
+        Dart_SetReturnValue(arguments, send_port);
+    }
+
+    Dart_ExitScope();
+}
+
+/**
+ ** int _closeLircTransmitterLocalSocket(int fd) native "LircTransmitter_CloseLocalSocket";
+ **/
+void lircTransmitterCloseLocalSocket(Dart_NativeArguments arguments) {
+    Dart_EnterScope();
+    Dart_SetReturnValue(arguments, Dart_Null());
+    Dart_Handle fd_object = HandleError(Dart_GetNativeArgument(arguments, 0));
+
+    if (Dart_IsInteger(fd_object)) {
+        bool fits;
+        HandleError(Dart_IntegerFitsIntoInt64(fd_object, &fits));
+        if (fits) {
+            int64_t fd;
+            HandleError(Dart_IntegerToInt64(fd_object, &fd));
+            int ret = close(fd);
+            Dart_SetReturnValue(arguments, HandleError(Dart_NewInteger(ret)));
+        }
     }
 
     Dart_ExitScope();
@@ -120,6 +188,10 @@ void wrappedLircReceiver(Dart_Port dest_port_id, Dart_CObject* message) {
             lirc_deinit();
         }
     }
+}
+
+void wrappedLircTransmitter(Dart_Port dest_port_id, Dart_CObject* message) {
+    
 }
 
 bool sendMessage(const char* msg, bool error, Dart_Port port_id) {

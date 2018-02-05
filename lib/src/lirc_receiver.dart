@@ -15,6 +15,12 @@ class LircReceiver {
   LircReceiver(this.appName, this.configFile);
 
   run() {
+    int fd = _getLircTransmitterLocalSocket(null);
+    print(fd);
+    _closeLircTransmitterLocalSocket(fd);
+
+
+    /*
     RawReceivePort port = new RawReceivePort((List list) {
       String msg = list[0];
       bool error = list[1];
@@ -23,8 +29,9 @@ class LircReceiver {
     });
     print("Setting up port");
     _newServicePort().send([appName, configFile, port.sendPort]);
+    //port.close();
     print("Got port");
+    */
   }
 
-  SendPort _newServicePort() native "LircReceiver_ServicePort";
 }
