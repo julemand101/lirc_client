@@ -78,8 +78,9 @@ class Program {
 
   static Future main(List<String> args) async {
     _checkEnv();
-    var projectPath = await Isolate.resolvePackageUri(
-        Uri.parse("package:dart_lirc_client/lirc_extension.yaml"));
+    var projectPath = (await Isolate.resolvePackageUri(
+            Uri.parse("package:dart_lirc_client/lirc_extension.yaml")))
+        .toFilePath();
     var result = Program.buildProject(projectPath, {
       'start': 'Building project "$projectPath"',
       'success': 'Building complete successfully',
