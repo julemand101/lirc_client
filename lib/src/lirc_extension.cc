@@ -1,5 +1,6 @@
 #include <lirc/lirc_client.h>
 #include <unistd.h>
+#include <stdio.h>
 #include "include/dart_api.h"
 #include "include/dart_native_api.h"
 
@@ -15,6 +16,7 @@ void lircTransmitterGetLocalSocket(Dart_NativeArguments arguments);
 void lircTransmitterServicePort(Dart_NativeArguments arguments);
 void lircTransmitterCloseLocalSocket(Dart_NativeArguments arguments);
 void wrappedLircReceiver(Dart_Port dest_port_id, Dart_CObject* message);
+void wrappedLircTransmitter(Dart_Port dest_port_id, Dart_CObject* message);
 bool sendMessage(const char* msg, bool error, Dart_Port port_id);
 
 DART_EXPORT Dart_Handle lirc_extension_Init(Dart_Handle parent_library) {
@@ -191,7 +193,46 @@ void wrappedLircReceiver(Dart_Port dest_port_id, Dart_CObject* message) {
 }
 
 void wrappedLircTransmitter(Dart_Port dest_port_id, Dart_CObject* message) {
-    
+    if (message->type == Dart_CObject_kArray && message->value.as_array.length == 2) {
+        Dart_CObject* param0 = message->value.as_array.values[0]; // File Descriptor for LIRC sending (int)
+        Dart_CObject* param1 = message->value.as_array.values[1]; // LIRC command to send to LIRC
+
+        if ((param0->type == Dart_CObject_kInt32 || param0->type == Dart_CObject_kInt64) &&
+            param1->type == Dart_CObject_kString) {
+
+            char* lircCommand = param1->value.as_string;
+            int fd;
+            switch (param0->type) {
+                case Dart_CObject_kInt32:
+                    fd = param0->value.as_int32;
+                    break;
+                case Dart_CObject_kInt64:
+                    fd = param0->value.as_int32;
+                    break;
+                default:
+                    fprintf(stderr, "Expected an int64 or int32 as the second argument, is: %d.\n", param0->type);
+                    return;
+            }
+
+            int r;
+            lirc_cmd_ctx command;
+
+            r = lirc_command_init(&command, lircCommand);
+            if (r != 0) {
+                fprintf(stderr, "Whops, lirc_command_init returned: %d.\n", r);
+                return;
+            }
+
+            do
+                r = lirc_command_run(&command, fd);
+            while (r == EAGAIN);
+
+            if (r != 0) {
+                fprintf(stderr, "Whops, lirc_command_run returned: %d.\n", r);
+                return;
+            }
+        }
+    }
 }
 
 bool sendMessage(const char* msg, bool error, Dart_Port port_id) {

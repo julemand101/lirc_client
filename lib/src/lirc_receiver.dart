@@ -16,8 +16,13 @@ class LircReceiver {
 
   run() {
     int fd = _getLircTransmitterLocalSocket(null);
-    print(fd);
-    _closeLircTransmitterLocalSocket(fd);
+
+    var t = _getLircTransmitterServicePort();
+
+    t.send([fd, "SEND_ONCE NAD_D1050 POWER_ON\n"]);
+    t.send([fd, "SEND_ONCE NAD_451 KEY_POWER\n"]);
+
+    //_closeLircTransmitterLocalSocket(fd);
 
 
     /*
