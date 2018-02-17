@@ -1,5 +1,6 @@
 library ccompile.example.example_build;
 
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:isolate';
@@ -9,8 +10,7 @@ import 'package:logging/logging.dart';
 import 'package:path/path.dart' as pathos;
 
 void main(List<String> args) {
-  Isolate.resolvePackageUri(Uri.parse("package:dart_lirc_client/lirc_extension.yaml")).then(print);
-  //Program.main(args);
+  Program.main(args);
 }
 
 class Program {
@@ -76,10 +76,10 @@ class Program {
     }
   }
 
-  static void main(List<String> args) {
+  static Future main(List<String> args) async {
     _checkEnv();
-    var basePath = Directory.current.path;
-    var projectPath = toAbsolutePath('lib/lirc_extension.yaml', basePath);
+    var projectPath = await Isolate.resolvePackageUri(
+        Uri.parse("package:dart_lirc_client/lirc_extension.yaml"));
     var result = Program.buildProject(projectPath, {
       'start': 'Building project "$projectPath"',
       'success': 'Building complete successfully',
@@ -87,14 +87,5 @@ class Program {
     });
 
     exit(result);
-  }
-
-  static String toAbsolutePath(String path, String base) {
-    if (pathos.isAbsolute(path)) {
-      return path;
-    }
-
-    path = pathos.join(base, path);
-    return pathos.absolute(path);
   }
 }
