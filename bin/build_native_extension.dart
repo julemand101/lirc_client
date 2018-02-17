@@ -1,6 +1,5 @@
 library ccompile.example.example_build;
 
-import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:isolate';
@@ -9,9 +8,9 @@ import 'package:ccompile/ccompile.dart';
 import 'package:logging/logging.dart';
 import 'package:path/path.dart' as pathos;
 
-void main(List<String> args) async {
-  await print(Isolate.resolvePackageUri(Uri.parse("package:dart_lirc_client/lirc_extension.yaml")));
-  Program.main(args);
+void main(List<String> args) {
+  Isolate.resolvePackageUri(Uri.parse("package:dart_lirc_client/lirc_extension.yaml")).then(print);
+  //Program.main(args);
 }
 
 class Program {
