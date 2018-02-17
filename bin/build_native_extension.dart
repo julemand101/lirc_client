@@ -10,7 +10,7 @@ import 'package:logging/logging.dart';
 import 'package:path/path.dart' as pathos;
 
 void main(List<String> args) async {
-  await print(Isolate.resolvePackageUri("package:dart_lirc_client/lirc_extension.yaml"));
+  await print(Isolate.resolvePackageUri(Uri.parse("package:dart_lirc_client/lirc_extension.yaml")));
   Program.main(args);
 }
 
