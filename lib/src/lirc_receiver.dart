@@ -1,4 +1,4 @@
-part of dart_lirc_client;
+part of lirc_client;
 
 /*
  * Vigtige data at sende med over i C koden:

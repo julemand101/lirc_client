@@ -4,7 +4,7 @@
 /// Support for doing something awesome.
 ///
 /// More dartdocs go here.
-library dart_lirc_client;
+library lirc_client;
 
 import 'dart:async';
 import 'dart:isolate';

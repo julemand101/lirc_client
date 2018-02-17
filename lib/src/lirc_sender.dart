@@ -1,4 +1,4 @@
-part of dart_lirc_client;
+part of lirc_client;
 
 class LircSender {
   /// SEND_ONCE `<remote control> <button name> [repeats]`

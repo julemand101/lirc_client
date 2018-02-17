@@ -1,4 +1,4 @@
-name: dart_lirc_client
+name: lirc_client
 description: Dart library for sending and receiving IR signals with lirc.
 version: 0.0.1
 #author: Jacob Bang <julemand101@gmail.com>

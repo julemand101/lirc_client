@@ -1,4 +1,4 @@
-part of dart_lirc_client;
+part of lirc_client;
 
 SendPort _getLircReceiverServicePort() native "LircReceiver_ServicePort";
 
