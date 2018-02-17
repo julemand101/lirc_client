@@ -8,7 +8,6 @@ import 'package:logging/logging.dart';
 import 'package:path/path.dart' as pathos;
 
 void main(List<String> args) {
-  print(Platform.environment);
   Program.main(args);
 }
 
