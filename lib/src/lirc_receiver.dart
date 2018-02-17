@@ -21,9 +21,7 @@ class LircReceiver {
 
     t.send([fd, "SEND_ONCE NAD_D1050 POWER_ON\n"]);
     t.send([fd, "SEND_ONCE NAD_451 KEY_POWER\n"]);
-
-    //_closeLircTransmitterLocalSocket(fd);
-
+    t.send([fd, null]);
 
     /*
     RawReceivePort port = new RawReceivePort((List list) {

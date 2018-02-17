@@ -14,7 +14,6 @@ Dart_NativeFunction ResolveName(Dart_Handle name, int argc, bool* auto_setup_sco
 void lircReceiverServicePort(Dart_NativeArguments arguments);
 void lircTransmitterGetLocalSocket(Dart_NativeArguments arguments);
 void lircTransmitterServicePort(Dart_NativeArguments arguments);
-void lircTransmitterCloseLocalSocket(Dart_NativeArguments arguments);
 void wrappedLircReceiver(Dart_Port dest_port_id, Dart_CObject* message);
 void wrappedLircTransmitter(Dart_Port dest_port_id, Dart_CObject* message);
 bool sendMessage(const char* msg, bool error, Dart_Port port_id);
@@ -43,7 +42,6 @@ FunctionLookup function_list[] = {
     {"LircReceiver_ServicePort", lircReceiverServicePort},
     {"LircTransmitter_GetLocalSocket", lircTransmitterGetLocalSocket},
     {"LircTransmitter_ServicePort", lircTransmitterServicePort},
-    {"LircTransmitter_CloseLocalSocket", lircTransmitterCloseLocalSocket},
     {NULL, NULL}};
 
 Dart_NativeFunction ResolveName(Dart_Handle name, int argc, bool* auto_setup_scope) {
@@ -125,28 +123,6 @@ void lircTransmitterServicePort(Dart_NativeArguments arguments) {
     Dart_ExitScope();
 }
 
-/**
- ** int _closeLircTransmitterLocalSocket(int fd) native "LircTransmitter_CloseLocalSocket";
- **/
-void lircTransmitterCloseLocalSocket(Dart_NativeArguments arguments) {
-    Dart_EnterScope();
-    Dart_SetReturnValue(arguments, Dart_Null());
-    Dart_Handle fd_object = HandleError(Dart_GetNativeArgument(arguments, 0));
-
-    if (Dart_IsInteger(fd_object)) {
-        bool fits;
-        HandleError(Dart_IntegerFitsIntoInt64(fd_object, &fits));
-        if (fits) {
-            int64_t fd;
-            HandleError(Dart_IntegerToInt64(fd_object, &fd));
-            int ret = close(fd);
-            Dart_SetReturnValue(arguments, HandleError(Dart_NewInteger(ret)));
-        }
-    }
-
-    Dart_ExitScope();
-}
-
 void wrappedLircReceiver(Dart_Port dest_port_id, Dart_CObject* message) {
     Dart_Port reply_port_id = ILLEGAL_PORT;
 
@@ -197,10 +173,9 @@ void wrappedLircTransmitter(Dart_Port dest_port_id, Dart_CObject* message) {
         Dart_CObject* param0 = message->value.as_array.values[0]; // File Descriptor for LIRC sending (int)
         Dart_CObject* param1 = message->value.as_array.values[1]; // LIRC command to send to LIRC
 
-        if ((param0->type == Dart_CObject_kInt32 || param0->type == Dart_CObject_kInt64) &&
-            param1->type == Dart_CObject_kString) {
+        if ((param0->type == Dart_CObject_kInt32  || param0->type == Dart_CObject_kInt64) &&
+            (param1->type == Dart_CObject_kString || param1->type == Dart_CObject_kNull)) {
 
-            char* lircCommand = param1->value.as_string;
             int fd;
             switch (param0->type) {
                 case Dart_CObject_kInt32:
@@ -214,22 +189,27 @@ void wrappedLircTransmitter(Dart_Port dest_port_id, Dart_CObject* message) {
                     return;
             }
 
-            int r;
-            lirc_cmd_ctx command;
+            if (param1->type == Dart_CObject_kNull) {
+                close(fd);
+            } else {
+                int r;
+                char* lircCommand = param1->value.as_string;
+                lirc_cmd_ctx command;
 
-            r = lirc_command_init(&command, lircCommand);
-            if (r != 0) {
-                fprintf(stderr, "Whops, lirc_command_init returned: %d.\n", r);
-                return;
-            }
+                r = lirc_command_init(&command, lircCommand);
+                if (r != 0) {
+                    fprintf(stderr, "Whops, lirc_command_init returned: %d.\n", r);
+                    return;
+                }
 
-            do
-                r = lirc_command_run(&command, fd);
-            while (r == EAGAIN);
+                do
+                    r = lirc_command_run(&command, fd);
+                while (r == EAGAIN);
 
-            if (r != 0) {
-                fprintf(stderr, "Whops, lirc_command_run returned: %d.\n", r);
-                return;
+                if (r != 0) {
+                    fprintf(stderr, "Whops, lirc_command_run returned: %d.\n", r);
+                    return;
+                }
             }
         }
     }

@@ -10,6 +10,3 @@ int _getLircTransmitterLocalSocket(String path)
     native "LircTransmitter_GetLocalSocket";
 
 SendPort _getLircTransmitterServicePort() native "LircTransmitter_ServicePort";
-
-int _closeLircTransmitterLocalSocket(int fd)
-    native "LircTransmitter_CloseLocalSocket";

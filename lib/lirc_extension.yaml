@@ -10,7 +10,7 @@ linker:
 platforms:
   linux:
     compiler:
-      arguments: ['-fPIC', '-Wall']
+      arguments: ['-fPIC', '-Wall', '-O3']
     linker:
       arguments: ['-shared', '-llirc_client']
       output_file: 'liblirc_extension.so'
