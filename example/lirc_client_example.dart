@@ -4,6 +4,10 @@
 import 'package:lirc_client/lirc_client.dart';
 
 main() {
-  var test = new LircReceiver("test", null);
-  test.run();
+  //var test = new LircReceiver("test", null);
+  //test.run();
+
+  LircSender sender = new LircSender();
+  sender.setTransmitters([1, 2]);
+  sender.close();
 }
