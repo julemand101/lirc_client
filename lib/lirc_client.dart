@@ -11,7 +11,7 @@ import 'dart:isolate';
 import 'dart-ext:lirc_extension';
 
 part 'src/lirc_extension.dart';
-part 'src/lirc_receiver.dart';
+part 'src/lirc_receiver_stream.dart';
 part 'src/lirc_sender.dart';
 
 // TODO: Export any libraries intended for clients of this package.

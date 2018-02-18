@@ -30,7 +30,7 @@ class LircSender {
   /// and defaults to 600.  If repeats is not specified or is less than the
   /// minimum number of repeats for the selected remote control, the minimum
   ///  value will be used.
-  void sendOnce(String remoteControl, String buttonName, {int repeats = 0}) {
+  void sendOnce(String remoteControl, String buttonName, [int repeats = 0]) {
     _send("SEND_ONCE $remoteControl $buttonName $repeats\n");
   }
 
