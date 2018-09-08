@@ -15,14 +15,14 @@ void main(List<String> args) {
   var os = Platform.operatingSystem;
 
   // Setup Dart SDK bitness for native extension
-  var bits = DartSDK.getVmBits();
+  // var bits = DartSDK.getVmBits();
 
   // Compiler options
-  var compilerDefine = {};
-  var compilerInclude = ['$DART_SDK/include'];
+  var compilerDefine = <String, String>{};
+  var compilerInclude = <String>['$DART_SDK/include'];
 
   // Linker options
-  var linkerLibpath = [];
+  var linkerLibpath = <String>[];
 
   // OS dependent parameters
   var libname = "";
@@ -84,7 +84,7 @@ void main(List<String> args) {
 
   // Compile on Posix
   rule("%.o", ["%.cc"], (Target t, Map args) {
-    var compiler = new GnuCppCompiler(bits: bits);
+    var compiler = new GnuCppCompiler();
     var args = ['-fPIC', '-Wall'];
     return compiler
         .compile(t.sources,
@@ -97,7 +97,7 @@ void main(List<String> args) {
 
   // Compile on Windows
   rule("%.obj", ["%.cc"], (Target t, Map args) {
-    var compiler = new MsCppCompiler(bits: bits);
+    var compiler = new MsCppCompiler();
     return compiler
         .compile(t.sources,
             define: compilerDefine, include: compilerInclude, output: t.name)
@@ -106,7 +106,7 @@ void main(List<String> args) {
 
   // Link on Linux
   file(LIBNAME_LINUX, objFiles, (Target t, Map args) {
-    var linker = new GnuLinker(bits: bits);
+    var linker = new GnuLinker();
     var args = ['-shared'];
     return linker
         .link(t.sources,
@@ -116,7 +116,7 @@ void main(List<String> args) {
 
   // Link on Macos
   file(LIBNAME_MACOS, objFiles, (Target t, Map args) {
-    var linker = new GnuLinker(bits: bits);
+    var linker = new GnuLinker();
     var args = ['-dynamiclib', '-undefined', 'dynamic_lookup'];
     return linker
         .link(t.sources,
@@ -126,7 +126,7 @@ void main(List<String> args) {
 
   // Link on Windows
   file(LIBNAME_WINDOWS, objFiles, (Target t, Map args) {
-    var linker = new MsLinker(bits: bits);
+    var linker = new MsLinker();
     var args = ['/DLL', 'dart.lib'];
     return linker
         .link(t.sources,

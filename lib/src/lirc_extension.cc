@@ -1,8 +1,8 @@
 #include <lirc/lirc_client.h>
 #include <unistd.h>
 #include <stdio.h>
-#include "include/dart_api.h"
-#include "include/dart_native_api.h"
+#include "dart_api.h"
+#include "dart_native_api.h"
 
 struct FunctionLookup {
     const char* name;
