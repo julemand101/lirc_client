@@ -24,8 +24,8 @@ class LircReceiverStream extends Stream<String> {
         onCancel: _onCancel);
   }
 
-  StreamSubscription<String> listen(void onData(String line),
-      {void onError(Error error), void onDone(), bool cancelOnError}) {
+  StreamSubscription<String> listen(void onData(String event),
+      {Function onError, void onDone(), bool cancelOnError}) {
     return _controller.stream.listen(onData,
         onError: onError, onDone: onDone, cancelOnError: cancelOnError);
   }
