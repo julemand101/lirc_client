@@ -1,92 +1,138 @@
-library ccompile.example.example_build;
-
-import 'dart:async';
-import 'dart:convert';
-import 'dart:io';
-import 'dart:isolate';
-
-import 'package:ccompile/ccompile.dart';
-import 'package:logging/logging.dart';
-import 'package:path/path.dart' as pathos;
+import "dart:io";
+import "package:build_tools/build_shell.dart";
+import "package:build_tools/build_tools.dart";
+import "package:ccompilers/ccompilers.dart";
+import "package:file_utils/file_utils.dart";
+import "package:patsubst/patsubst.dart";
 
 void main(List<String> args) {
-  Program.main(args);
-}
+  const String PROJECT_NAME = "lirc_extension";
+  const String LIBNAME_LINUX = "lib$PROJECT_NAME.so";
+  const String LIBNAME_MACOS = "lib$PROJECT_NAME.dylib";
+  const String LIBNAME_WINDOWS = "$PROJECT_NAME.dll";
 
-class Program {
-  static int buildProject(projectPath, Map messages) {
-    var workingDirectory = pathos.dirname(projectPath);
-    var message = messages['start'];
-    if (!message.isEmpty) {
-      print(message);
-    }
+  // Determine operating system
+  var os = Platform.operatingSystem;
 
-    var logger = new Logger("Builder");
-    logger.onRecord.listen((record) {
-      try {
-        var decoder = new JsonDecoder();
-        var message = decoder.convert(record.message);
-        if (message is Map) {
-          if (message["operation"] == "run") {
-            var parameters = message["parameters"];
-            if (parameters is Map) {
-              var executable = parameters["executable"];
-              if (executable is String) {
-                var arguments = parameters["arguments"];
-                if (arguments is List) {
-                  print("$executable ${arguments.join(" ")}");
-                }
-              }
-            }
-          }
-        }
-      } catch (e) {}
-    });
+  // Setup Dart SDK bitness for native extension
+  var bits = DartSDK.getVmBits();
 
-    ProjectBuilder.logger = logger;
-    var builder = new ProjectBuilder();
-    var project = builder.loadProject(projectPath);
-    var result = builder.buildAndClean(project, workingDirectory);
-    if (result.exitCode == 0) {
-      var message = messages['success'];
-      if (!message.isEmpty) {
-        print(message);
-      }
-    } else {
-      var message = messages['error'];
-      if (!message.isEmpty) {
-        print(message);
-      }
-    }
+  // Compiler options
+  var compilerDefine = {};
+  var compilerInclude = ['$DART_SDK/include'];
 
-    return result.exitCode == 0 ? 0 : 1;
+  // Linker options
+  var linkerLibpath = [];
+
+  // OS dependent parameters
+  var libname = "";
+  var objExtension = "";
+  switch (os) {
+    case "linux":
+      libname = LIBNAME_LINUX;
+      objExtension = ".o";
+      break;
+    case "macos":
+      libname = LIBNAME_MACOS;
+      objExtension = ".o";
+      break;
+    case "windows":
+      libname = LIBNAME_WINDOWS;
+      objExtension = ".obj";
+      compilerDefine["DART_SHARED_LIB"] = null;
+      linkerLibpath.add('$DART_SDK/bin');
+      break;
+    default:
+      print("Unsupported operating system: $os");
+      exit(-1);
   }
 
-  static String getRootScriptDirectory() {
-    return pathos.dirname(Platform.script.toFilePath());
+  // Set working directory
+  FileUtils.chdir("lib/src");
+
+  // C++ files
+  var cppFiles = FileUtils.glob("*.cc");
+  if (os != "windows") {
+    cppFiles = FileUtils.exclude(cppFiles, "${PROJECT_NAME}_dllmain_win.cc");
   }
 
-  static void _checkEnv() {
-    var undef =
-        const ['DART_SDK'].where((v) => !Platform.environment.containsKey(v));
-    if (undef.isNotEmpty) {
-      stderr.writeln(
-          'Required environment variables are undefined: ${undef.join(", ")}');
-      exit(1);
-    }
-  }
+  // Object files
+  var objFiles = patsubst("%.cc", "%${objExtension}").replaceAll(cppFiles);
 
-  static Future main(List<String> args) async {
-    _checkEnv();
-    var projectPath = (await Isolate.resolvePackageUri(
-            Uri.parse("package:lirc_client/lirc_extension.yaml")))
-        .toFilePath();
-    var result = Program.buildProject(projectPath, {
-      'start': 'Building project "$projectPath"',
-      'success': 'Building complete successfully',
-      'error': 'Building complete with some errors'
-    });
+  // Makefile
+  // Target: default
+  target("default", ["build"], null, description: "Build and clean.");
 
-    exit(result);
-  }
+  // Target: build
+  target("build", ["clean_all", "compile_link", "clean"], (Target t, Map args) {
+    print("The ${t.name} successful.");
+  }, description: "Build '$PROJECT_NAME'.");
+
+  // Target: compile_link
+  target("compile_link", [libname], (Target t, Map args) {},
+      description: "Compile and link '$PROJECT_NAME'.");
+
+  // Target: clean
+  target("clean", [], (Target t, Map args) {
+    FileUtils.rm(["*.exp", "*.lib", "*.o", "*.obj"], force: true);
+  }, description: "Deletes all intermediate files.", reusable: true);
+
+  // Target: clean_all
+  target("clean_all", ["clean"], (Target t, Map args) {
+    FileUtils.rm([libname], force: true);
+  }, description: "Deletes all intermediate and output files.", reusable: true);
+
+  // Compile on Posix
+  rule("%.o", ["%.cc"], (Target t, Map args) {
+    var compiler = new GnuCppCompiler(bits: bits);
+    var args = ['-fPIC', '-Wall'];
+    return compiler
+        .compile(t.sources,
+            arguments: args,
+            define: compilerDefine,
+            include: compilerInclude,
+            output: t.name)
+        .exitCode;
+  });
+
+  // Compile on Windows
+  rule("%.obj", ["%.cc"], (Target t, Map args) {
+    var compiler = new MsCppCompiler(bits: bits);
+    return compiler
+        .compile(t.sources,
+            define: compilerDefine, include: compilerInclude, output: t.name)
+        .exitCode;
+  });
+
+  // Link on Linux
+  file(LIBNAME_LINUX, objFiles, (Target t, Map args) {
+    var linker = new GnuLinker(bits: bits);
+    var args = ['-shared'];
+    return linker
+        .link(t.sources,
+            arguments: args, libpaths: linkerLibpath, output: t.name)
+        .exitCode;
+  });
+
+  // Link on Macos
+  file(LIBNAME_MACOS, objFiles, (Target t, Map args) {
+    var linker = new GnuLinker(bits: bits);
+    var args = ['-dynamiclib', '-undefined', 'dynamic_lookup'];
+    return linker
+        .link(t.sources,
+            arguments: args, libpaths: linkerLibpath, output: t.name)
+        .exitCode;
+  });
+
+  // Link on Windows
+  file(LIBNAME_WINDOWS, objFiles, (Target t, Map args) {
+    var linker = new MsLinker(bits: bits);
+    var args = ['/DLL', 'dart.lib'];
+    return linker
+        .link(t.sources,
+            arguments: args, libpaths: linkerLibpath, output: t.name)
+        .exitCode;
+  });
+
+  new BuildShell().run(args).then((exitCode) => exit(exitCode));
 }
