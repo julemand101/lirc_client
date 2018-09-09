@@ -164,7 +164,11 @@ void wrappedLircReceiver(Dart_Port dest_port_id, Dart_CObject* message) {
                 lirc_freeconfig(config);
             }
             lirc_deinit();
+        } else {
+            fprintf( stderr, "The input types was %d %d %d!\n", param0->type, param1->type, param2->type);
         }
+    } else {
+        fprintf( stderr, "The input was not an array with 3 elements!\n");
     }
 }
 

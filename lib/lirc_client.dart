@@ -8,7 +8,7 @@ library lirc_client;
 
 import 'dart:async';
 import 'dart:isolate';
-import 'dart-ext:lirc_extension';
+import 'dart-ext:src/lirc_extension';
 
 part 'src/lirc_extension.dart';
 part 'src/lirc_receiver_stream.dart';

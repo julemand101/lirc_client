@@ -85,7 +85,7 @@ void main(List<String> args) {
   // Compile on Posix
   rule("%.o", ["%.cc"], (Target t, Map args) {
     var compiler = new GnuCppCompiler();
-    var args = ['-fPIC', '-Wall'];
+    var args = ['-fPIC', '-Wall', '-O3'];
     return compiler
         .compile(t.sources,
             arguments: args,
@@ -107,7 +107,7 @@ void main(List<String> args) {
   // Link on Linux
   file(LIBNAME_LINUX, objFiles, (Target t, Map args) {
     var linker = new GnuLinker();
-    var args = ['-shared'];
+    var args = ['-shared', '-llirc_client'];
     return linker
         .link(t.sources,
             arguments: args, libpaths: linkerLibpath, output: t.name)
