@@ -1,7 +1,7 @@
 part of lirc_client;
 
 @immutable
-class LircMessage {
+abstract class LircMessage {
   final List<String> rawMessage;
 
   LircMessage(List<String> rawMessage)
@@ -11,6 +11,10 @@ class LircMessage {
 @immutable
 class LircSighupMessage extends LircMessage {
   LircSighupMessage(List<String> rawMessage) : super(rawMessage);
+
+  @override
+  String toString() => 'LircSighupMessage: {'
+      'rawMessage: $rawMessage}';
 }
 
 @immutable
@@ -44,6 +48,13 @@ class LircReplyMessage extends LircMessage {
             if (rawMessage[3] == 'DATA')
               ...rawMessage.sublist(5, 5 + int.parse(rawMessage[4]))
           ]);
+
+  @override
+  String toString() => 'LircReplyMessage: {'
+      'command; $command, '
+      'error: $error, '
+      'data: $data, '
+      'rawMessage: $rawMessage}';
 }
 
 @immutable
@@ -73,6 +84,14 @@ class LircBroadcastMessage extends LircMessage {
         buttonName: parts[2],
         remoteControlName: parts[3]);
   }
+
+  @override
+  String toString() => 'LircBroadcastMessage: {'
+      'code: $code (hex: ${code.toRadixString(16).padLeft(16, '0')}, '
+      'repeatCount: $repeatCount (hex: ${repeatCount.toRadixString(16)}), '
+      'buttonName: $buttonName, '
+      'remoteControlName: $remoteControlName, '
+      'rawMessage: $rawMessage}';
 }
 
 /*

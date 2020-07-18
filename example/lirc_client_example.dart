@@ -3,6 +3,8 @@ import 'package:lirc_client/lirc_client.dart';
 Future<void> main() async {
   final client = await LircClient.connect();
 
+  client.broadcastMessages.listen(print);
+
   client.broadcastMessages
       .where((event) => event.remoteControlName == 'Sony_RM-ED009-12')
       .listen((event) {
