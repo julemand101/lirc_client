@@ -1,25 +1,43 @@
 part of lirc_client;
 
-class LircSender {
-  static SendPort _sendPort = _getLircTransmitterServicePort();
+class LircClient {
+  final Socket _socket;
+  final StreamController<LircMessage> _streamController =
+      StreamController.broadcast();
+  final Queue<Completer<LircReplyMessage>> _commandsAwaitingAnswer = Queue();
 
-  int _fileDescriptor = 0;
+  LircClient._(this._socket) {
+    _streamController.addStream(_socket
+        .cast<List<int>>()
+        .transform(const Utf8Decoder())
+        .transform(const LineSplitter())
+        .transform(_LircMessageTransformer()));
 
-  LircSender({String socketPath}) {
-    this._fileDescriptor = _getLircTransmitterLocalSocket(socketPath);
+    _replyMessages.listen((reply) {
+      print(_commandsAwaitingAnswer.length);
+      print(reply.rawMessage);
 
-    if (this._fileDescriptor <= 0) {
-      if (socketPath == null) {
-        throw new LircSenderException(
-            "Could not get file descriptor for standard LIRC socket. "
-            "Got return code: $_fileDescriptor");
-      } else {
-        throw new LircSenderException(
-            "Could not get file descriptor for LIRC socket $socketPath. "
-            "Got return code: $_fileDescriptor");
+      if (_commandsAwaitingAnswer.isNotEmpty) {
+        _commandsAwaitingAnswer.removeFirst().complete(reply);
       }
-    }
+    });
   }
+
+  static Future<LircClient> connect(
+          {String unixSocketPath = '/var/run/lirc/lircd'}) async =>
+      LircClient._(await Socket.connect(
+          InternetAddress(unixSocketPath, type: InternetAddressType.unix), 0));
+
+  Stream<LircMessage> get _allMessages => _streamController.stream;
+
+  Stream<LircReplyMessage> get _replyMessages =>
+      _allMessages.whereType<LircReplyMessage>();
+
+  Stream<LircBroadcastMessage> get broadcastMessages =>
+      _allMessages.whereType<LircBroadcastMessage>();
+
+  Stream<LircSighupMessage> get sighups =>
+      _allMessages.whereType<LircSighupMessage>();
 
   /// SEND_ONCE `<remote control> <button name> [repeats]`
   ///
@@ -30,55 +48,62 @@ class LircSender {
   /// and defaults to 600.  If repeats is not specified or is less than the
   /// minimum number of repeats for the selected remote control, the minimum
   ///  value will be used.
-  void sendOnce(String remoteControl, String buttonName, [int repeats = 0]) {
-    _send("SEND_ONCE $remoteControl $buttonName $repeats\n");
-  }
+  Future<LircReplyMessage> sendOnce(String remoteControl, String buttonName,
+          {int repeats}) =>
+      (repeats == null)
+          ? _send("SEND_ONCE $remoteControl $buttonName\n")
+          : _send("SEND_ONCE $remoteControl $buttonName $repeats\n");
 
   /// SEND_START `<remote control name> <button name>`
   ///
   /// Tell lircd to start repeating the given button until it receives a
   /// SEND_STOP command. However, the number of repeats is limited to repeat_max.
   /// lircd won't accept any new send commands while it is repeating.
-  void sendStart(String remoteControl, String buttonName) {
-    _send("SEND_START $remoteControl $buttonName\n");
-  }
+  Future<LircReplyMessage> sendStart(String remoteControl, String buttonName) =>
+      _send("SEND_START $remoteControl $buttonName\n");
 
   /// SEND_STOP `<remote control name> <button name>`
   ///
   /// Tell lircd to abort a SEND_START command.
-  void sendStop(String remoteControl, String buttonName) {
-    _send("SEND_STOP $remoteControl $buttonName\n");
-  }
+  Future<LircReplyMessage> sendStop(String remoteControl, String buttonName) =>
+      _send("SEND_STOP $remoteControl $buttonName\n");
 
-  /// SET_TRANSMITTERS transmitter mask
+  /// LIST `[remote control]`
+  ///
+  /// Without arguments lircd replies with a list of all defined remote
+  /// controls. Given a remote control argument, lircd replies with a list of
+  /// all keys defined in the given remote.
+  Future<LircReplyMessage> list({String remoteControl}) =>
+      (remoteControl == null)
+          ? _send('LIST\n')
+          : _send('LIST $remoteControl\n');
+
+  /// SET_TRANSMITTERS `transmitter mask`
   ///
   /// Make lircd invoke the drvctl_func(LIRC_SET_TRANSMITTER_MASK, &channels),
   /// where channels is the decoded value of transmitter mask. See lirc(4) for
   /// more information.
-  void setTransmitters(List<int> transmitterIds) {
-    _send("SET_TRANSMITTERS ${transmitterIds.join(" ")}\n");
+  Future<LircReplyMessage> setTransmitters(List<int> transmitterIds) =>
+      _send("SET_TRANSMITTERS ${transmitterIds.join(" ")}\n");
+
+  /// VERSION
+  ///
+  /// Tell lircd to send a version packet response.
+  Future<LircReplyMessage> version() => _send('VERSION\n');
+
+  Future<void> close() async {
+    await _socket.flush();
+    await _socket.close();
+    _commandsAwaitingAnswer.forEach(
+        (completer) => completer.completeError('close() called on LircClient'));
   }
 
-  void close() {
-    _send(null);
-    _fileDescriptor = 0;
-  }
+  Future<LircReplyMessage> _send(String command) {
+    final completer = Completer<LircReplyMessage>();
 
-  void _send(String command) {
-    if (_fileDescriptor <= 0) {
-      throw new LircSenderException("File descriptor is closed.");
-    }
-    _sendPort.send([_fileDescriptor, command]);
-  }
-}
+    _commandsAwaitingAnswer.add(completer);
+    _socket.add(utf8.encode(command));
 
-class LircSenderException implements Exception {
-  final message;
-
-  LircSenderException([this.message]);
-
-  String toString() {
-    if (message == null) return "LircSenderException";
-    return "LircSenderException: $message";
+    return completer.future;
   }
 }

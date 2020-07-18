@@ -1,23 +1,19 @@
-// Copyright (c) 2016, <your name>. All rights reserved. Use of this source code
-// is governed by a BSD-style license that can be found in the LICENSE file.
-
 import 'package:lirc_client/lirc_client.dart';
-import 'dart:io';
 
-main() {
-  //var test = new LircReceiver("test", null);
-  //test.run();
+Future<void> main() async {
+  final client = await LircClient.connect();
 
-  LircSender sender = new LircSender();
-
-  new LircReceiverStream("test").listen((String data) {
-    print(data);
-
-    if (data == "Mere lyd!!!") {
-      sender.sendOnce("NAD_D1050", "POWER_ON");
-    } else if (data == "MINDRE LYD") {
-      sender.sendOnce("NAD_D1050", "POWER_OFF");
+  client.broadcastMessages
+      .where((event) => event.remoteControlName == 'Sony_RM-ED009-12')
+      .listen((event) {
+    if (event.buttonName == "KEY_VOLUMEUP") {
+      client.sendOnce("NAD_SR6", "KEY_VOLUMEUP");
+    } else if (event.buttonName == "KEY_VOLUMEDOWN") {
+      client.sendOnce("NAD_SR6", "KEY_VOLUMEDOWN");
+    } else if (event.buttonName == "KEY_MUTE") {
+      client.sendOnce("NAD_SR6", "KEY_POWER");
     }
-
   });
+
+  print(":: Program is running!");
 }

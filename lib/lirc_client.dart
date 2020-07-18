@@ -7,11 +7,16 @@
 library lirc_client;
 
 import 'dart:async';
-import 'dart:isolate';
-import 'dart-ext:src/lirc_extension';
+import 'dart:collection';
+import 'dart:convert';
+import 'dart:io';
 
-part 'src/lirc_extension.dart';
-part 'src/lirc_receiver_stream.dart';
+import 'package:meta/meta.dart';
+
+part 'src/lirc_message.dart';
+part 'src/lirc_message_transformer.dart';
 part 'src/lirc_sender.dart';
 
-// TODO: Export any libraries intended for clients of this package.
+extension _Where<T> on Stream<T> {
+  Stream<S> whereType<S>() => where((e) => e is S).cast<S>();
+}
