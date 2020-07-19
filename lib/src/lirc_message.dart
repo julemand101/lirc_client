@@ -74,7 +74,6 @@ class LircBroadcastMessage extends LircMessage {
 
   factory LircBroadcastMessage.parse(List<String> rawMessage) {
     // <code> <repeat count> <button name> <remote control name>
-    print(rawMessage.first);
     final parts = rawMessage.first.split(' ');
 
     return LircBroadcastMessage._(

@@ -14,9 +14,6 @@ class LircClient {
         .transform(_LircMessageTransformer()));
 
     _replyMessages.listen((reply) {
-      print(_commandsAwaitingAnswer.length);
-      print(reply.rawMessage);
-
       if (_commandsAwaitingAnswer.isNotEmpty) {
         _commandsAwaitingAnswer.removeFirst().complete(reply);
       }

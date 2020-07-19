@@ -10,7 +10,6 @@ class _LircMessageTransformer
   Stream<LircMessage> bind(Stream<String> stream) async* {
     await for (final line in stream) {
       _buffer.add(line);
-      print(_buffer);
 
       if (line == 'BEGIN' && _multipleLineBlock == false) {
         _multipleLineBlock = true;
