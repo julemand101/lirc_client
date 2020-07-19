@@ -2,7 +2,6 @@ part of lirc_client;
 
 class _LircMessageTransformer
     implements StreamTransformer<String, LircMessage> {
-
   bool _multipleLineBlock = false;
   final List<String> _buffer = [];
 
@@ -13,7 +12,6 @@ class _LircMessageTransformer
 
       if (line == 'BEGIN' && _multipleLineBlock == false) {
         _multipleLineBlock = true;
-
       } else if (line == 'END' && _multipleLineBlock) {
         if (_buffer.length == 3 && _buffer[1] == 'SIGHUP') {
           yield LircSighupMessage(_buffer);
