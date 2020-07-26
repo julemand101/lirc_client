@@ -2,11 +2,14 @@ part of lirc_client;
 
 class _LircMessageTransformer
     implements StreamTransformer<String, LircMessage> {
-  bool _multipleLineBlock = false;
-  final List<String> _buffer = [];
+
+  const _LircMessageTransformer();
 
   @override
   Stream<LircMessage> bind(Stream<String> stream) async* {
+    var _multipleLineBlock = false;
+    final _buffer = <String>[];
+
     await for (final line in stream) {
       _buffer.add(line);
 

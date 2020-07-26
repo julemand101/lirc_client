@@ -7,15 +7,19 @@ class LircClient {
   final Queue<Completer<LircReplyMessage>> _commandsAwaitingAnswer = Queue();
 
   LircClient._(this._socket) {
-    _streamController.addStream(_socket
-        .cast<List<int>>()
-        .transform(const Utf8Decoder())
-        .transform(const LineSplitter())
-        .transform(_LircMessageTransformer()));
+    _socket.encoding = const Utf8Codec(allowMalformed: true);
 
-    _replyMessages.listen((reply) {
+    _streamController.addStream(const Utf8Codec(allowMalformed: true)
+        .decoder
+        .bind(_socket)
+        .transform(const LineSplitter())
+        .transform(const _LircMessageTransformer()));
+
+    _streamController.stream.whereType<LircReplyMessage>().listen((reply) {
       if (_commandsAwaitingAnswer.isNotEmpty) {
         _commandsAwaitingAnswer.removeFirst().complete(reply);
+      } else {
+        // Some logging
       }
     });
   }
@@ -25,16 +29,11 @@ class LircClient {
       LircClient._(await Socket.connect(
           InternetAddress(unixSocketPath, type: InternetAddressType.unix), 0));
 
-  Stream<LircMessage> get _allMessages => _streamController.stream;
-
-  Stream<LircReplyMessage> get _replyMessages =>
-      _allMessages.whereType<LircReplyMessage>();
-
   Stream<LircBroadcastMessage> get broadcastMessages =>
-      _allMessages.whereType<LircBroadcastMessage>();
+      _streamController.stream.whereType<LircBroadcastMessage>();
 
   Stream<LircSighupMessage> get sighups =>
-      _allMessages.whereType<LircSighupMessage>();
+      _streamController.stream.whereType<LircSighupMessage>();
 
   /// SEND_ONCE `<remote control> <button name> [repeats]`
   ///
@@ -47,9 +46,12 @@ class LircClient {
   ///  value will be used.
   Future<LircReplyMessage> sendOnce(String remoteControl, String buttonName,
           {int repeats}) =>
-      (repeats == null)
-          ? _send("SEND_ONCE $remoteControl $buttonName\n")
-          : _send("SEND_ONCE $remoteControl $buttonName $repeats\n");
+      _send([
+        'SEND_ONCE',
+        remoteControl,
+        buttonName,
+        if (repeats != null) repeats
+      ]);
 
   /// SEND_START `<remote control name> <button name>`
   ///
@@ -57,13 +59,13 @@ class LircClient {
   /// SEND_STOP command. However, the number of repeats is limited to repeat_max.
   /// lircd won't accept any new send commands while it is repeating.
   Future<LircReplyMessage> sendStart(String remoteControl, String buttonName) =>
-      _send("SEND_START $remoteControl $buttonName\n");
+      _send(['SEND_START', remoteControl, buttonName]);
 
   /// SEND_STOP `<remote control name> <button name>`
   ///
   /// Tell lircd to abort a SEND_START command.
   Future<LircReplyMessage> sendStop(String remoteControl, String buttonName) =>
-      _send("SEND_STOP $remoteControl $buttonName\n");
+      _send(['SEND_STOP', remoteControl, buttonName]);
 
   /// LIST `[remote control]`
   ///
@@ -71,22 +73,20 @@ class LircClient {
   /// controls. Given a remote control argument, lircd replies with a list of
   /// all keys defined in the given remote.
   Future<LircReplyMessage> list({String remoteControl}) =>
-      (remoteControl == null)
-          ? _send('LIST\n')
-          : _send('LIST $remoteControl\n');
+      _send(['LIST', if (remoteControl != null) remoteControl]);
 
   /// SET_TRANSMITTERS `transmitter mask`
   ///
   /// Make lircd invoke the drvctl_func(LIRC_SET_TRANSMITTER_MASK, &channels),
   /// where channels is the decoded value of transmitter mask. See lirc(4) for
   /// more information.
-  Future<LircReplyMessage> setTransmitters(List<int> transmitterIds) =>
-      _send("SET_TRANSMITTERS ${transmitterIds.join(" ")}\n");
+  Future<LircReplyMessage> setTransmitters(Iterable<int> transmitterIds) =>
+      _send(['SET_TRANSMITTERS', ...transmitterIds]);
 
   /// VERSION
   ///
   /// Tell lircd to send a version packet response.
-  Future<LircReplyMessage> version() => _send('VERSION\n');
+  Future<LircReplyMessage> version() => _send(const ['VERSION']);
 
   Future<void> close() async {
     await _socket.flush();
@@ -95,11 +95,14 @@ class LircClient {
         (completer) => completer.completeError('close() called on LircClient'));
   }
 
-  Future<LircReplyMessage> _send(String command) {
+  Future<LircReplyMessage> _send(Iterable<Object> command) {
     final completer = Completer<LircReplyMessage>();
 
     _commandsAwaitingAnswer.add(completer);
-    _socket.add(utf8.encode(command));
+    _socket.write((StringBuffer()
+          ..writeAll(command, ' ')
+          ..writeln())
+        .toString());
 
     return completer.future;
   }
