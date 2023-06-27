@@ -38,13 +38,14 @@ class LircReplyMessage extends LircMessage {
   // n lines of data]
   // END
   factory LircReplyMessage.parse(List<String> rawMessage) => LircReplyMessage._(
-          rawMessage: rawMessage,
-          command: rawMessage[1],
-          error: rawMessage[2] == 'ERROR',
-          data: [
-            if (rawMessage[3] == 'DATA')
-              ...rawMessage.sublist(5, 5 + int.parse(rawMessage[4]))
-          ]);
+        rawMessage: rawMessage,
+        command: rawMessage[1],
+        error: rawMessage[2] == 'ERROR',
+        data: [
+          if (rawMessage[3] == 'DATA')
+            ...rawMessage.sublist(5, 5 + int.parse(rawMessage[4]))
+        ],
+      );
 
   @override
   String toString() => 'LircReplyMessage: {'
@@ -73,11 +74,12 @@ class LircBroadcastMessage extends LircMessage {
     final parts = rawMessage.first.split(' ');
 
     return LircBroadcastMessage._(
-        rawMessage: rawMessage,
-        code: int.parse(parts[0], radix: 16),
-        repeatCount: int.parse(parts[1], radix: 16),
-        buttonName: parts[2],
-        remoteControlName: parts[3]);
+      rawMessage: rawMessage,
+      code: int.parse(parts[0], radix: 16),
+      repeatCount: int.parse(parts[1], radix: 16),
+      buttonName: parts[2],
+      remoteControlName: parts[3],
+    );
   }
 
   @override

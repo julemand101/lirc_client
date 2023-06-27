@@ -24,10 +24,13 @@ class LircClient {
     });
   }
 
-  static Future<LircClient> connect(
-          {String unixSocketPath = '/var/run/lirc/lircd'}) async =>
+  static Future<LircClient> connect({
+    String unixSocketPath = '/var/run/lirc/lircd',
+  }) async =>
       LircClient._(await Socket.connect(
-          InternetAddress(unixSocketPath, type: InternetAddressType.unix), 0));
+        InternetAddress(unixSocketPath, type: InternetAddressType.unix),
+        0,
+      ));
 
   Stream<LircBroadcastMessage> get broadcastMessages =>
       _streamController.stream.whereType<LircBroadcastMessage>();
@@ -99,10 +102,12 @@ class LircClient {
     final completer = Completer<LircReplyMessage>();
 
     _commandsAwaitingAnswer.add(completer);
-    _socket.write((StringBuffer()
-          ..writeAll(command, ' ')
-          ..writeln())
-        .toString());
+    _socket.write(
+      (StringBuffer()
+            ..writeAll(command, ' ')
+            ..writeln())
+          .toString(),
+    );
 
     return completer.future;
   }

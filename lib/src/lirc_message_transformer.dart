@@ -7,25 +7,25 @@ class _LircMessageTransformer
 
   @override
   Stream<LircMessage> bind(Stream<String> stream) async* {
-    var _multipleLineBlock = false;
-    final _buffer = <String>[];
+    var isMultipleLineBlock = false;
+    final buffer = <String>[];
 
     await for (final line in stream) {
-      _buffer.add(line);
+      buffer.add(line);
 
-      if (line == 'BEGIN' && _multipleLineBlock == false) {
-        _multipleLineBlock = true;
-      } else if (line == 'END' && _multipleLineBlock) {
-        if (_buffer.length == 3 && _buffer[1] == 'SIGHUP') {
-          yield LircSighupMessage(_buffer);
+      if (line == 'BEGIN' && isMultipleLineBlock == false) {
+        isMultipleLineBlock = true;
+      } else if (line == 'END' && isMultipleLineBlock) {
+        if (buffer.length == 3 && buffer[1] == 'SIGHUP') {
+          yield LircSighupMessage(buffer);
         } else {
-          yield LircReplyMessage.parse(_buffer);
+          yield LircReplyMessage.parse(buffer);
         }
-        _buffer.clear();
-        _multipleLineBlock = false;
-      } else if (_multipleLineBlock == false) {
-        yield LircBroadcastMessage.parse(_buffer);
-        _buffer.clear();
+        buffer.clear();
+        isMultipleLineBlock = false;
+      } else if (isMultipleLineBlock == false) {
+        yield LircBroadcastMessage.parse(buffer);
+        buffer.clear();
       }
     }
   }
