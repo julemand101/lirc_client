@@ -1,12 +1,10 @@
 name: lirc_client
 description: Dart library for sending and receiving IR signals with lirc using unix sockets.
-version: 0.1.0
-author: Jacob Bang <julemand101@archlinux.dk>
+version: 0.2.0
 homepage: https://github.com/julemand101/lirc_client/
 
 environment:
-  sdk: '>=2.8.4 <3.0.0'
+  sdk: "^3.0.0"
 
 dev_dependencies:
-  extra_pedantic: ^1.2.0
-  meta: ^1.2.2
+  lints: ^2.1.1

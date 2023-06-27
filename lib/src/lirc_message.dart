@@ -1,14 +1,12 @@
 part of lirc_client;
 
-@immutable
-abstract class LircMessage {
+sealed class LircMessage {
   final List<String> rawMessage;
 
   LircMessage(List<String> rawMessage)
       : this.rawMessage = List.unmodifiable(rawMessage);
 }
 
-@immutable
 class LircSighupMessage extends LircMessage {
   LircSighupMessage(List<String> rawMessage) : super(rawMessage);
 
@@ -17,7 +15,6 @@ class LircSighupMessage extends LircMessage {
       'rawMessage: $rawMessage}';
 }
 
-@immutable
 class LircReplyMessage extends LircMessage {
   final String command;
   final bool error;
@@ -25,12 +22,12 @@ class LircReplyMessage extends LircMessage {
 
   bool get success => !error;
 
-  LircReplyMessage._(
-      {@required List<String> rawMessage,
-      @required this.command,
-      @required this.error,
-      @required List<String> data})
-      : this.data = UnmodifiableListView(data),
+  LircReplyMessage._({
+    required List<String> rawMessage,
+    required this.command,
+    required this.error,
+    required List<String> data,
+  })  : this.data = UnmodifiableListView(data),
         super(rawMessage);
 
   // BEGIN
@@ -57,20 +54,19 @@ class LircReplyMessage extends LircMessage {
       'rawMessage: $rawMessage}';
 }
 
-@immutable
 class LircBroadcastMessage extends LircMessage {
   final int code;
   final int repeatCount;
   final String buttonName;
   final String remoteControlName;
 
-  LircBroadcastMessage._(
-      {@required List<String> rawMessage,
-      @required this.code,
-      @required this.repeatCount,
-      @required this.buttonName,
-      @required this.remoteControlName})
-      : super(rawMessage);
+  LircBroadcastMessage._({
+    required List<String> rawMessage,
+    required this.code,
+    required this.repeatCount,
+    required this.buttonName,
+    required this.remoteControlName,
+  }) : super(rawMessage);
 
   factory LircBroadcastMessage.parse(List<String> rawMessage) {
     // <code> <repeat count> <button name> <remote control name>

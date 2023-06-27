@@ -11,8 +11,6 @@ import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:meta/meta.dart';
-
 part 'src/lirc_message.dart';
 part 'src/lirc_message_transformer.dart';
 part 'src/lirc_sender.dart';

@@ -45,7 +45,7 @@ class LircClient {
   /// minimum number of repeats for the selected remote control, the minimum
   ///  value will be used.
   Future<LircReplyMessage> sendOnce(String remoteControl, String buttonName,
-          {int repeats}) =>
+          {int? repeats}) =>
       _send([
         'SEND_ONCE',
         remoteControl,
@@ -72,7 +72,7 @@ class LircClient {
   /// Without arguments lircd replies with a list of all defined remote
   /// controls. Given a remote control argument, lircd replies with a list of
   /// all keys defined in the given remote.
-  Future<LircReplyMessage> list({String remoteControl}) =>
+  Future<LircReplyMessage> list({String? remoteControl}) =>
       _send(['LIST', if (remoteControl != null) remoteControl]);
 
   /// SET_TRANSMITTERS `transmitter mask`
