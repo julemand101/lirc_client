@@ -6,7 +6,8 @@ homepage: https://github.com/julemand101/lirc_client/
 environment:
   sdk: "^3.5.0"
 
-dev_dependencies:
-  lints: ^4.0.0
 dependencies:
   stream_transform: ^2.1.0
+
+dev_dependencies:
+  lints: ^4.0.0
