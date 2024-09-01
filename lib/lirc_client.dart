@@ -11,10 +11,8 @@ import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:stream_transform/stream_transform.dart';
+
 part 'src/lirc_message.dart';
 part 'src/lirc_message_transformer.dart';
 part 'src/lirc_sender.dart';
-
-extension _Where<T> on Stream<T> {
-  Stream<S> whereType<S>() => where((e) => e is S).cast<S>();
-}

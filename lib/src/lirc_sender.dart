@@ -28,9 +28,7 @@ class LircClient {
     String unixSocketPath = '/var/run/lirc/lircd',
   }) async =>
       LircClient._(await Socket.connect(
-        InternetAddress(unixSocketPath, type: InternetAddressType.unix),
-        0,
-      ));
+          InternetAddress(unixSocketPath, type: InternetAddressType.unix), 0));
 
   Stream<LircBroadcastMessage> get broadcastMessages =>
       _streamController.stream.whereType<LircBroadcastMessage>();
