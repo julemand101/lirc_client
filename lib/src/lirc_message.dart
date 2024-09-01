@@ -1,14 +1,14 @@
-part of lirc_client;
+import 'dart:collection';
 
 sealed class LircMessage {
   final List<String> rawMessage;
 
   LircMessage(List<String> rawMessage)
-      : this.rawMessage = List.unmodifiable(rawMessage);
+      : rawMessage = List.unmodifiable(rawMessage);
 }
 
 class LircSighupMessage extends LircMessage {
-  LircSighupMessage(List<String> rawMessage) : super(rawMessage);
+  LircSighupMessage(super.rawMessage);
 
   @override
   String toString() => 'LircSighupMessage: {'
@@ -27,7 +27,7 @@ class LircReplyMessage extends LircMessage {
     required this.command,
     required this.error,
     required List<String> data,
-  })  : this.data = UnmodifiableListView(data),
+  })  : data = UnmodifiableListView(data),
         super(rawMessage);
 
   // BEGIN

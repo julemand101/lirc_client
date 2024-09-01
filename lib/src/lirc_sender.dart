@@ -1,4 +1,12 @@
-part of lirc_client;
+import 'dart:async';
+import 'dart:collection';
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:stream_transform/stream_transform.dart';
+
+import 'lirc_message.dart';
+import 'lirc_message_transformer.dart';
 
 class LircClient {
   final Socket _socket;
@@ -13,7 +21,7 @@ class LircClient {
         .decoder
         .bind(_socket)
         .transform(const LineSplitter())
-        .transform(const _LircMessageTransformer()));
+        .transform(const LircMessageTransformer()));
 
     _streamController.stream.whereType<LircReplyMessage>().listen((reply) {
       if (_commandsAwaitingAnswer.isNotEmpty) {
@@ -92,8 +100,9 @@ class LircClient {
   Future<void> close() async {
     await _socket.flush();
     await _socket.close();
-    _commandsAwaitingAnswer.forEach(
-        (completer) => completer.completeError('close() called on LircClient'));
+    for (final completer in _commandsAwaitingAnswer) {
+      completer.completeError('close() called on LircClient');
+    }
   }
 
   Future<LircReplyMessage> _send(Iterable<Object> command) {
