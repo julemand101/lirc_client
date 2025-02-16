@@ -2,9 +2,7 @@ import 'dart:async';
 
 import 'lirc_message.dart';
 
-class LircMessageTransformer
-    implements StreamTransformer<String, LircMessage> {
-
+class LircMessageTransformer implements StreamTransformer<String, LircMessage> {
   const LircMessageTransformer();
 
   @override

@@ -17,11 +17,12 @@ class LircClient {
   LircClient._(this._socket) {
     _socket.encoding = const Utf8Codec(allowMalformed: true);
 
-    _streamController.addStream(const Utf8Codec(allowMalformed: true)
-        .decoder
-        .bind(_socket)
-        .transform(const LineSplitter())
-        .transform(const LircMessageTransformer()));
+    _streamController.addStream(
+      const Utf8Codec(allowMalformed: true).decoder
+          .bind(_socket)
+          .transform(const LineSplitter())
+          .transform(const LircMessageTransformer()),
+    );
 
     _streamController.stream.whereType<LircReplyMessage>().listen((reply) {
       if (_commandsAwaitingAnswer.isNotEmpty) {
@@ -34,9 +35,12 @@ class LircClient {
 
   static Future<LircClient> connect({
     String unixSocketPath = '/var/run/lirc/lircd',
-  }) async =>
-      LircClient._(await Socket.connect(
-          InternetAddress(unixSocketPath, type: InternetAddressType.unix), 0));
+  }) async => LircClient._(
+    await Socket.connect(
+      InternetAddress(unixSocketPath, type: InternetAddressType.unix),
+      0,
+    ),
+  );
 
   Stream<LircBroadcastMessage> get broadcastMessages =>
       _streamController.stream.whereType<LircBroadcastMessage>();
@@ -53,14 +57,16 @@ class LircClient {
   /// and defaults to 600.  If repeats is not specified or is less than the
   /// minimum number of repeats for the selected remote control, the minimum
   ///  value will be used.
-  Future<LircReplyMessage> sendOnce(String remoteControl, String buttonName,
-          {int? repeats}) =>
-      _send([
-        'SEND_ONCE',
-        remoteControl,
-        buttonName,
-        if (repeats != null) repeats
-      ]);
+  Future<LircReplyMessage> sendOnce(
+    String remoteControl,
+    String buttonName, {
+    int? repeats,
+  }) => _send([
+    'SEND_ONCE',
+    remoteControl,
+    buttonName,
+    if (repeats != null) repeats,
+  ]);
 
   /// SEND_START `<remote control name> <button name>`
   ///

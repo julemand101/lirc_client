@@ -4,14 +4,15 @@ sealed class LircMessage {
   final List<String> rawMessage;
 
   LircMessage(List<String> rawMessage)
-      : rawMessage = List.unmodifiable(rawMessage);
+    : rawMessage = List.unmodifiable(rawMessage);
 }
 
 class LircSighupMessage extends LircMessage {
   LircSighupMessage(super.rawMessage);
 
   @override
-  String toString() => 'LircSighupMessage: {'
+  String toString() =>
+      'LircSighupMessage: {'
       'rawMessage: $rawMessage}';
 }
 
@@ -27,8 +28,8 @@ class LircReplyMessage extends LircMessage {
     required this.command,
     required this.error,
     required List<String> data,
-  })  : data = UnmodifiableListView(data),
-        super(rawMessage);
+  }) : data = UnmodifiableListView(data),
+       super(rawMessage);
 
   // BEGIN
   // <command>
@@ -38,17 +39,18 @@ class LircReplyMessage extends LircMessage {
   // n lines of data]
   // END
   factory LircReplyMessage.parse(List<String> rawMessage) => LircReplyMessage._(
-        rawMessage: rawMessage,
-        command: rawMessage[1],
-        error: rawMessage[2] == 'ERROR',
-        data: [
-          if (rawMessage[3] == 'DATA')
-            ...rawMessage.sublist(5, 5 + int.parse(rawMessage[4]))
-        ],
-      );
+    rawMessage: rawMessage,
+    command: rawMessage[1],
+    error: rawMessage[2] == 'ERROR',
+    data: [
+      if (rawMessage[3] == 'DATA')
+        ...rawMessage.sublist(5, 5 + int.parse(rawMessage[4])),
+    ],
+  );
 
   @override
-  String toString() => 'LircReplyMessage: {'
+  String toString() =>
+      'LircReplyMessage: {'
       'command; $command, '
       'error: $error, '
       'data: $data, '
@@ -83,7 +85,8 @@ class LircBroadcastMessage extends LircMessage {
   }
 
   @override
-  String toString() => 'LircBroadcastMessage: {'
+  String toString() =>
+      'LircBroadcastMessage: {'
       'code: $code (hex: ${code.toRadixString(16).padLeft(16, '0')}, '
       'repeatCount: $repeatCount (hex: ${repeatCount.toRadixString(16)}), '
       'buttonName: $buttonName, '
