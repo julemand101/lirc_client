@@ -12,8 +12,10 @@ Future<void> main() async {
   Future<void> turnOn() async {
     print('### TV POWERED ON ###');
     client.sendOnce(dac, 'POWER_ON');
+
     await Future<void>.delayed(const Duration(seconds: 1));
     client.sendOnce(receiver, 'KEY_POWER');
+
     await Future<void>.delayed(const Duration(seconds: 7));
     client.sendOnce(dac, 'OPTICAL_1');
   }
@@ -21,6 +23,7 @@ Future<void> main() async {
   Future<void> turnOff() async {
     print('### TV POWERED OFF ###');
     client.sendOnce(dac, 'POWER_OFF');
+
     await Future<void>.delayed(const Duration(seconds: 1));
     client.sendOnce(receiver, 'off');
   }
@@ -38,8 +41,8 @@ Future<void> main() async {
 
   Process cecProcess = await Process.start('/usr/bin/cec-client', const ['-m']);
 
-  RegExp tvTurningOn =
-      RegExp(r".*TV \(0\): power status changed from '.+' to 'on'");
+  RegExp tvTurningOn = RegExp(r".*TV \(0\): power status changed from '.+' to "
+      r"'(on)|(in transition from standby to on)'");
 
   cecProcess.stdout
       .transform(utf8.decoder)
