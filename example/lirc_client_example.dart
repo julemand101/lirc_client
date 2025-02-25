@@ -13,7 +13,7 @@ Future<void> main() async {
     print('### TV POWERED ON ###');
     client.sendOnce(dac, 'POWER_ON');
 
-    await Future<void>.delayed(const Duration(seconds: 1));
+    await Future<void>.delayed(const Duration(milliseconds: 200));
     client.sendOnce(receiver, 'KEY_POWER');
 
     await Future<void>.delayed(const Duration(seconds: 7));
@@ -24,7 +24,7 @@ Future<void> main() async {
     print('### TV POWERED OFF ###');
     client.sendOnce(dac, 'POWER_OFF');
 
-    await Future<void>.delayed(const Duration(seconds: 1));
+    await Future<void>.delayed(const Duration(milliseconds: 200));
     client.sendOnce(receiver, 'off');
   }
 
