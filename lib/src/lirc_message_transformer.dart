@@ -31,7 +31,5 @@ class LircMessageTransformer implements StreamTransformer<String, LircMessage> {
   }
 
   @override
-  StreamTransformer<RS, RT> cast<RS, RT>() {
-    throw UnimplementedError();
-  }
+  StreamTransformer<RS, RT> cast<RS, RT>() => throw UnimplementedError();
 }

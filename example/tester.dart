@@ -39,7 +39,7 @@ void main() {
     '00000000000029d6 RCVR_MUTE_ENTER',
     '000000000000649b RCVR_DISPLAY',
     '000000000000cc33 RCVR_TUNE_MODE',
-    'END'
+    'END',
   ]);
 
   print(msg.rawMessage);

@@ -21,6 +21,5 @@ Future<void> main() async {
   final result = await client.list();
   print(result.data);
 
-
   await client.close();
 }

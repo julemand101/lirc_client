@@ -15,11 +15,9 @@ class LircClient {
   final Queue<Completer<LircReplyMessage>> _commandsAwaitingAnswer = Queue();
 
   LircClient._(this._socket) {
-    _socket.encoding = const Utf8Codec(allowMalformed: true);
-
     _streamController.addStream(
       const Utf8Codec(allowMalformed: true).decoder
-          .bind(_socket)
+          .bind(_socket..encoding = const Utf8Codec(allowMalformed: true))
           .transform(const LineSplitter())
           .transform(const LircMessageTransformer()),
     );
@@ -61,12 +59,7 @@ class LircClient {
     String remoteControl,
     String buttonName, {
     int? repeats,
-  }) => _send([
-    'SEND_ONCE',
-    remoteControl,
-    buttonName,
-    if (repeats != null) repeats,
-  ]);
+  }) => _send(['SEND_ONCE', remoteControl, buttonName, ?repeats]);
 
   /// SEND_START `<remote control name> <button name>`
   ///
@@ -88,7 +81,7 @@ class LircClient {
   /// controls. Given a remote control argument, lircd replies with a list of
   /// all keys defined in the given remote.
   Future<LircReplyMessage> list({String? remoteControl}) =>
-      _send(['LIST', if (remoteControl != null) remoteControl]);
+      _send(['LIST', ?remoteControl]);
 
   /// SET_TRANSMITTERS `transmitter mask`
   ///
@@ -116,10 +109,9 @@ class LircClient {
 
     _commandsAwaitingAnswer.add(completer);
     _socket.write(
-      (StringBuffer()
-            ..writeAll(command, ' ')
-            ..writeln())
-          .toString(),
+      StringBuffer()
+        ..writeAll(command, ' ')
+        ..writeln(),
     );
 
     return completer.future;
