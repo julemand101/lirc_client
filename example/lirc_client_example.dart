@@ -134,6 +134,23 @@ Future<void> main() async {
         }
       });
 
+  // HTTP Rest endpoint for mobile remote control
+  HttpServer httpServer = await HttpServer.bind(InternetAddress.anyIPv4, 8081);
+  httpServer.listen((request) async {
+    switch (request.requestedUri.path) {
+      case final path when path.endsWith('volume/up'):
+        client.sendOnce(receiver, 'KEY_VOLUMEUP');
+      case final path when path.endsWith('volume/down'):
+        client.sendOnce(receiver, 'KEY_VOLUMEDOWN');
+      case final path when path.endsWith('power/on'):
+        turnOn();
+      case final path when path.endsWith('power/off'):
+        turnOff();
+    }
+    await request.drain(null);
+    await request.response.close();
+  });
+
   // MPD related logic
   final mpcProcess = await Process.start(mpc, const ['idleloop', 'output']);
   final pattern = RegExp(r'Output (\d+) \((.+)\) is (disabled|enabled)');
